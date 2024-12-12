@@ -6,6 +6,7 @@ const server = http.createServer(app);
 const WebSocket = require("ws");
 const wsGlobal = new WebSocket.Server({ noServer: true });
 const wsGeofencing = new WebSocket.Server({ noServer: true });
+const wsHealthReport = new WebSocket.Server({noServer:true});
 const url = require("url");
 const { converBase64ToImage } = require("convert-base64-to-image");
 const { queryPOST, queryGET, queryCustom } = require("./helpers/query");
@@ -49,6 +50,10 @@ async function insertedDataVehStats(data) {
     ","
   )}) VALUES ('${dataValues.join("','")}')`);
   await queryCustom(`${qInsertData}`);
+}
+
+async function updateVOCHealthReport(data) {
+  console.log("update data ",data);
 }
 
 wsGlobal.on("connection", function connection(ws, request) {
@@ -260,9 +265,88 @@ wsGeofencing.on("connection", function connection(ws, request) {
   });
 });
 
-server.on("upgrade", function upgrade(request, socket, head) {
-  const pathname = url.parse(request.url).pathname;
+wsHealthReport.on("connection", function connection(ws, request) {
+  console.log(
+    "Connected :    " +
+      request.socket.remoteAddress +
+      ":" +
+      request.socket.remotePort
+  );
+  const query = url.parse(request.url, true).query;
 
+  const jsonData = {
+    vehicle_id: query.vehicle_id,
+    device: query.device,
+  };
+
+  ws.id = jsonData;
+  ws.send(
+    JSON.stringify({
+      message: "Connected",
+      data: {
+        identifier: ws.id,
+      },
+    })
+  );
+
+  ws.on("message", async function incoming(message) {
+    var data = JSON.parse(message);
+    console.log(data.event);
+
+    if (data.voc) {
+      await updateVOCHealthReport(data);
+    }
+    wsHealthReport.clients.forEach(async (client) => {
+      if (
+        client.id.vehicle_id == ws.id.vehicle_id &&
+        client.id.device == data.target
+      ) {
+        wsHealthReport.clients.forEach((client) => {
+          if (
+            client.id.vehicle_id == ws.id.vehicle_id &&
+            client.id.device == data.target
+          ) {
+            switch (data.event) {
+              default:
+                client.send(JSON.stringify({
+                  mesage:"balasan",
+                  req:request.socket.remoteAddress + ":" +request.socket.remotePort
+                }));
+            }
+          }
+        });
+      }
+    });
+  });
+
+  // // on disconnect
+  ws.on("close", function close() {
+    console.log(
+      "Disconnected :    " +
+        request.socket.remoteAddress +
+        ":" +
+        request.socket.remotePort
+    );
+    const query = url.parse(request.url, true).query;
+
+    const jsonData = {
+      vehicle_id: query.vehicle_id,
+      device: query.device,
+    };
+
+    ws.id = jsonData;
+    ws.send(
+      JSON.stringify({
+        message: "Connected",
+        data: {
+          identifier: ws.id,
+        },
+      })
+    );
+  });
+});server.on("upgrade", function upgrade(request, socket, head) {
+  const pathname = url.parse(request.url).pathname;
+  console.log("pathname ",pathname)
   if (pathname === "/geofencing") {
     console.log(`CONNECTED TO WEBSOCKET '${pathname}'`);
     wsGeofencing.handleUpgrade(request, socket, head, function done(ws) {
@@ -273,7 +357,13 @@ server.on("upgrade", function upgrade(request, socket, head) {
     wsGlobal.handleUpgrade(request, socket, head, function done(ws) {
       wsGlobal.emit("connection", ws, request);
     });
-  } else {
+  } else if (pathname === "/health") {
+    console.log(`CONNECTED TO WEBSOCKET '${pathname}'`);
+    wsHealthReport.handleUpgrade(request, socket, head, function done(ws) {
+      wsHealthReport.emit("connection", ws, request);
+    });
+  } 
+  else {
     socket.destroy();
   }
 });
@@ -285,4 +375,5 @@ server.listen(3100, function listening() {
 module.exports = {
   wss: wsGlobal,
   wssGeofencing: wsGeofencing,
+  wsHealthReport: wsHealthReport
 };

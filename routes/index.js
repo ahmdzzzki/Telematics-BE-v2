@@ -12,6 +12,8 @@ router.use("/geofencing", require("./geofencing"));
 router.use("/trip", require("./trip"));
 router.use("/trip_history", require("./triphistory"));
 router.use("/camera", require("./camera"));
+router.use("/health",require("./health-report"));
+router.use("/air-monitor", require("./air_monitor"));
 
 router.get("/image", (req, res) => {
   try {

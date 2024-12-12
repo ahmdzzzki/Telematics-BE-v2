@@ -14,9 +14,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-const api = require("./routes/index");
+// const api = require("./routes/index");
 
-app.use("/api/v1", api);
+app.use("/api/v1", require("./routes/index"));
 app.use('/uploads/service_information', express.static('uploads/service_information'));
 
 function print(path, layer) {
