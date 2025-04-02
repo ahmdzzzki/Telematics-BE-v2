@@ -1,5 +1,5 @@
 const { queryPOST, queryGET, queryDELETE } = require("../../helpers/query");
-const { tb_r_health_report } = require("../../config/tables");
+const { tb_r_health_report } = require("../../config/tables"); // table baru
 const response = require("../../helpers/response");
 
 module.exports = {
@@ -14,13 +14,48 @@ module.exports = {
     }
   },
 
+  getHealthReportByDate: async (req, res) => {
+    try {
+        const { date } = req.query;
+        console.log(`[BACKEND] Incoming Request for Health Reports on Date: ${date}`);
+
+        if (!date) {
+            return response.badRequest(res, "Tanggal harus diberikan");
+        }
+
+        // Konversi ke format YYYY-MM-DD untuk keamanan
+        const parsedDate = new Date(date);
+        if (isNaN(parsedDate)) {
+            return response.badRequest(res, "Format tanggal tidak valid");
+        }
+        const formattedDate = parsedDate.toISOString().split('T')[0];
+        
+        // Pastikan whereCond dalam bentuk string yang benar
+        const whereCond = `WHERE DATE(time) = '${formattedDate}'`;
+
+        console.log(`[BACKEND] Executing Query: SELECT * FROM tb_r_health_report ${whereCond}`);
+
+        let healthReportData = await queryGET(tb_r_health_report, whereCond);
+
+        console.log(`[BACKEND] Query Result: ${healthReportData.length} records found`);
+
+        return response.success(res, healthReportData);
+    } catch (error) {
+        console.error("[BACKEND] Error fetching health report:", error);
+        return response.error(res, "Gagal mengambil data laporan kesehatan");
+    }
+  },
+
+
+
   // Controller untuk menambahkan data health report
   addHealthReportData: async (req, res) => {
     try {
       const healthReport = req.body;
 
       // Validasi data yang diperlukan
-      if (!healthReport.user_id || !healthReport.time || !healthReport.trip_history_id) {
+      // (!healthReport.user_id || !healthReport.time || !healthReport.trip_history_id)
+      if (!healthReport.user_id) {
         return response.badRequest(res, "User ID, Time, and Trip History ID are required");
       }
 
