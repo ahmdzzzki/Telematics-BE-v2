@@ -66,7 +66,7 @@ module.exports = {
 
         console.log(`[BACKEND] Executing Query: SELECT * FROM tb_r_air_condition ${whereCond}`);
 
-        let airQualityData = await queryGET("tb_r_air_condition", whereCond);
+        let airQualityData = await queryGET(tb_r_air_condition, whereCond);
 
         console.log(`[BACKEND] Query Result: ${airQualityData.length} records found`);
 
