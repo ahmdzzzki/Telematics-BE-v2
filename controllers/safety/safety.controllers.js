@@ -33,7 +33,8 @@ module.exports = {
           ${queryCond}`
       );
       let mapData = await historicalDrowData.map((item) => {
-        item.img_path = `http://103.190.28.211:3000/api/v1/image?path=${item.img_path}`;
+        // item.img_path = `http://103.190.28.211:3000/api/v1/image?path=${item.img_path}`;
+        item.img_path = `http://203.100.57.59:3000/api/v1/image?path=${item.img_path}`;
         return item;
       });
       response.success(res, mapData);

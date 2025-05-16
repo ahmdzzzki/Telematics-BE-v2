@@ -23,7 +23,8 @@ module.exports = {
           if (client.id.vehicle_id == req.body.vehicle_id && client.id.device == 'GPS') {
             client.send(JSON.stringify({
               event: 'update_geofencing',
-              data: list[0]
+              // data: list[0]
+              data: [list[0]]
             }));
           }
         })
@@ -71,7 +72,8 @@ module.exports = {
           if (client.id.vehicle_id == req.body.vehicle_id && client.id.device == 'GPS') {
             client.send(JSON.stringify({
               event: 'update_geofencing',
-              data: list[0]
+              // data: list[0]
+              data: [list[0]]
             }));
           }
         })

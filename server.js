@@ -17,7 +17,7 @@ const {
 
 async function insertedDataVehStats(data) {
   // data["vehicle_id"] = data["VIN"];
-  data['vehicle_id'] = 'MHFAA8AF7P0001003'
+  data['vehicle_id'] = '1HGCM82633A123456'
   delete data["VIN"];
   data["oiltemp"] = data["oiltemp."];
   delete data["oiltemp."];
@@ -98,7 +98,8 @@ wsGlobal.on("connection", function connection(ws, request) {
           2,
           data.data.image.length - 1
         )}`;
-        const pathToSaveImage = `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`;
+        // const pathToSaveImage = `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`;
+        const pathToSaveImage = path.resolve(__dirname, `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`);
         // DUMMY
         let insertedData = {
           vehicle_id: query.vehicle_id,
@@ -110,6 +111,23 @@ wsGlobal.on("connection", function connection(ws, request) {
         };
         await queryPOST(tb_r_driver_behavior, insertedData);
         converBase64ToImage(base64, pathToSaveImage);
+        wsGlobal.clients.forEach((client) => {
+          if (
+            client.readyState === WebSocket.OPEN &&
+            client.id.vehicle_id === query.vehicle_id
+          ) {
+            client.send(
+              JSON.stringify({
+                event: "STREAM_IMAGE",
+                data: {
+                  // image: base64,
+                  image: base64.replace(/^data:image\/\w+;base64,/, ""),
+                  message: "Real-time image stream"
+                }
+              })
+            );
+          }
+        });
         break;
       default:
         console.log("Nothing to Do!");
@@ -201,7 +219,9 @@ wsGeofencing.on("connection", function connection(ws, request) {
           2,
           data.data.image.length - 1
         )}`;
-        const pathToSaveImage = `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`;
+        // const pathToSaveImage = `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`;
+        const pathToSaveImage = path.resolve(__dirname, `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`);
+
         // DUMMY
         let insertedData = {
           vehicle_id: query.vehicle_id,
@@ -213,6 +233,23 @@ wsGeofencing.on("connection", function connection(ws, request) {
         };
         await queryPOST(tb_r_driver_behavior, insertedData);
         converBase64ToImage(base64, pathToSaveImage);
+        wsGlobal.clients.forEach((client) => {
+          if (
+            client.readyState === WebSocket.OPEN &&
+            client.id.vehicle_id === query.vehicle_id
+          ) {
+            client.send(
+              JSON.stringify({
+                event: "STREAM_IMAGE",
+                data: {
+                  // image: base64,
+                  image: base64.replace(/^data:image\/\w+;base64,/, ""),
+                  message: "Real-time image stream"
+                }
+              })
+            );
+          }
+        });
         break;
       default:
         console.log("Nothing to Do!");

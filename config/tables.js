@@ -15,10 +15,14 @@ module.exports = {
   tb_r_car_service_history: "tb_r_car_service_history",
   tb_r_ip_camera:"tb_r_ip_camera",
   tb_r_health_report:"tb_r_health_report",
-  tb_r_visitor_activity:"tb_r_visitor_activity"
+  tb_r_visitor_activity:"tb_r_visitor_activity",
+  tb_m_key_access:"tb_m_key_access"
 };
 /* Batch 2 ada ketambahan tabel 
   tb_r_health_report
   tb_r_aircondition
 */
 
+/* Batch 3 ada ketambahan tabel 
+  tb_m_key_access
+*/

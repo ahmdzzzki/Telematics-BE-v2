@@ -14,7 +14,8 @@ const database = mysql.createPool({
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
-  timezone: 'Asia/Jakarta'
+  timezone: 'Asia/Jakarta',
+  allowPublicKeyRetrieval: true, 
 });
 
 module.exports = database;

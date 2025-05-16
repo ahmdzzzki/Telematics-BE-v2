@@ -16,14 +16,14 @@ async function userCheck(username) {
 
 module.exports = {
   generateToken: async (payload) => {
-    var token = jwt.sign(payload, process.env.SECRET_KE, { expiresIn: '1m' });
+    var token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '1m' });
     return token;
   },
 
   generateRefreshToken: async (user) => {  
     const refreshToken = jwt.sign({ userId: user.id }, process.env.SECRET_KEY, { expiresIn: '1d' }); // Refresh token berlaku selama 7 hari  
     // Simpan refresh token di database atau cache untuk verifikasi di masa mendatang  
-    await saveRefreshToken(user.id, refreshToken); // Implementasikan fungsi ini untuk menyimpan refresh token  
+    // await saveRefreshToken(user.id, refreshToken); // Implementasikan fungsi ini untuk menyimpan refresh token  
     return refreshToken;  
   },
 

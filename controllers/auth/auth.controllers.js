@@ -2,7 +2,7 @@ const { tb_m_users } = require("../../config/tables");
 const { encrypt, decrypt } = require("../../helpers/security");
 const { queryPOST, queryGET } = require("../../helpers/query");
 const response = require("../../helpers/response");
-const { generateToken } = require("../../middleware/auth");
+const { generateToken, generateRefreshToken,} = require("../../middleware/auth");
 
 module.exports = {
   login: async (req, res) => {
