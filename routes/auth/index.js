@@ -6,7 +6,7 @@ router.post("/login", auth.login);
 router.post("/register", preventSqlInjection, auth.register);
 // router.post("/register/RFID", auth.register);
 // router.post("/register/FG",auth.register);
-
+router.post("/refresh", auth.refreshToken);
 
 module.exports = router;
         

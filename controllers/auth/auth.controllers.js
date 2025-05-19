@@ -43,32 +43,56 @@ module.exports = {
     }
   },
 
-  refreshToken: async (req, res) => {  
-    const { refreshToken } = req.body;  
+  // refreshToken: async (req, res) => {  
+  //   const { refreshToken } = req.body;  
     
-    if (!refreshToken) {  
-      return response.unauthorized(res, "Refresh token is required");  
-    }  
+  //   if (!refreshToken) {  
+  //     return response.unauthorized(res, "Refresh token is required");  
+  //   }  
     
-    try {  
-      // Verifikasi refresh token  
-      const userData = jwt.verify(refreshToken, process.env.SECRET_KEY);  
+  //   try {  
+  //     // Verifikasi refresh token  
+  //     const userData = jwt.verify(refreshToken, process.env.SECRET_KEY);  
         
-      // Cek apakah refresh token valid dan ada di database  
-      const storedRefreshToken = await getStoredRefreshToken(userData.userId); // Implementasikan fungsi ini  
-      if (!storedRefreshToken || storedRefreshToken !== refreshToken) {  
-        return response.unauthorized(res, "Invalid refresh token");  
-      }  
+  //     // Cek apakah refresh token valid dan ada di database  
+  //     const storedRefreshToken = await getStoredRefreshToken(userData.userId); // Implementasikan fungsi ini  
+  //     if (!storedRefreshToken || storedRefreshToken !== refreshToken) {  
+  //       return response.unauthorized(res, "Invalid refresh token");  
+  //     }  
     
-      // Jika valid, buat token akses baru  
-      const newAccessToken = await generateToken({ userId: userData.userId });  
-      response.success(res, { accessToken: newAccessToken });  
-    } catch (error) {  
-      console.log(error);  
-      response.unauthorized(res, "Invalid refresh token");  
-    }  
-  },  
+  //     // Jika valid, buat token akses baru  
+  //     const newAccessToken = await generateToken({ userId: userData.userId });  
+  //     response.success(res, { accessToken: newAccessToken });  
+  //   } catch (error) {  
+  //     console.log(error);  
+  //     response.unauthorized(res, "Invalid refresh token");  
+  //   }  
+  // },  
   
+  refreshToken: async (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return response.unauthorized(res, "Refresh token is required");
+    }
+
+    try {
+      // Verifikasi refresh token valid
+      const userData = jwt.verify(refreshToken, process.env.SECRET_KEY);
+
+      if (!userData || !userData.userId) {
+        return response.unauthorized(res, "Invalid refresh token payload");
+      }
+
+      // Generate access token baru
+      const newAccessToken = await generateToken({ userId: userData.userId });
+
+      return response.success(res, { accessToken: newAccessToken });
+    } catch (err) {
+      console.log(err);
+      return response.unauthorized(res, "Invalid or expired refresh token");
+    }
+  },
+
   logout: async (req, res) => {  
     const userId = req.user.id; // Ambil user ID dari request  
     await deleteStoredRefreshToken(userId); // Hapus refresh token dari penyimpanan  
