@@ -8,7 +8,9 @@ const {
 } = require("../../config/tables");
 const { queryGET, queryPOST, queryCustom } = require("../../helpers/query");
 const response = require("../../helpers/response");
-const { v4: uuidv4 } = require('uuid'); 
+const { v4: uuidv4 } = require('uuid');
+const moment = require('moment-timezone');
+
 module.exports = {
   userVehicleInfo: async (req, res) => {
     try {
@@ -328,6 +330,8 @@ module.exports = {
       if (!id || !visitor_id || !type) {
         return response.error(res, "Key Access ID, Visitor ID, and Type are required", 400);
       }
+
+      const createdAt = moment().tz('Asia/Jakarta').format('YYYY-MM-DD HH:mm:ss');
   
       // 1. Insert key access ke tb_m_key_access
       const keyAccessData = {
@@ -335,7 +339,7 @@ module.exports = {
         visitor_id,
         type,
         // created_at: new Date(),
-        created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+        created_at: createdAt
       };
   
       await queryPOST(tb_m_key_access, keyAccessData);
