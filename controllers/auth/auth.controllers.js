@@ -2,7 +2,14 @@ const { tb_m_users } = require("../../config/tables");
 const { encrypt, decrypt } = require("../../helpers/security");
 const { queryPOST, queryGET } = require("../../helpers/query");
 const response = require("../../helpers/response");
+const {
+  saveRefreshToken,
+  getStoredRefreshToken,
+  deleteStoredRefreshToken
+} = require("../../middleware/auth"); 
 const { generateToken, generateRefreshToken,} = require("../../middleware/auth");
+
+const jwt = require("jsonwebtoken");
 
 module.exports = {
   login: async (req, res) => {
@@ -68,7 +75,7 @@ module.exports = {
   //     response.unauthorized(res, "Invalid refresh token");  
   //   }  
   // },  
-  
+
   refreshToken: async (req, res) => {
     const { refreshToken } = req.body;
     if (!refreshToken) {
@@ -76,22 +83,33 @@ module.exports = {
     }
 
     try {
-      // Verifikasi refresh token valid
-      const userData = jwt.verify(refreshToken, process.env.SECRET_KEY);
+      const decoded = jwt.verify(refreshToken, process.env.SECRET_KEY);
 
-      if (!userData || !userData.userId) {
-        return response.unauthorized(res, "Invalid refresh token payload");
+      // Ambil dari DB berdasarkan userId
+      const storedRefreshToken = await getStoredRefreshToken(decoded.userId);
+      if (storedRefreshToken !== refreshToken) {
+        return response.unauthorized(res, "Invalid or expired refresh token");
       }
 
-      // Generate access token baru
-      const newAccessToken = await generateToken({ userId: userData.userId });
+      // Ambil user
+      const userList = await queryGET(tb_m_users, `WHERE user_id = ${decoded.userId}`);
+      const user = userList[0];
+      if (!user) return response.unauthorized(res, "User not found");
 
-      return response.success(res, { accessToken: newAccessToken });
+      const newAccessToken = await generateToken(user);
+      const newRefreshToken = await generateRefreshToken(user);
+
+      return response.success(res, {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken
+      });
     } catch (err) {
-      console.log(err);
+      console.log("❌ Error refreshing token:", err);
       return response.unauthorized(res, "Invalid or expired refresh token");
     }
   },
+
+
 
   logout: async (req, res) => {  
     const userId = req.user.id; // Ambil user ID dari request  
