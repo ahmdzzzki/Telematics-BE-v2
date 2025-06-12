@@ -1,7 +1,8 @@
 const { tb_m_users } = require("../config/tables");
 const jwt = require("jsonwebtoken");
 const response = require("../helpers/response");
-const { queryGET } = require("../helpers/query");
+const { queryGET, queryPUT } = require("../helpers/query");
+
 
 async function userCheck(username) {
   return await queryGET(tb_m_users, `WHERE username = '${username}'`)
@@ -14,18 +15,58 @@ async function userCheck(username) {
     });
 }
 
+async function getStoredRefreshToken(userId) {
+  const result = await queryGET(tb_m_users, `WHERE user_id = ${userId}`);
+  return result[0]?.refreshToken || null;
+}
+
+
+async function saveRefreshToken(userId, refreshToken) {
+  await queryPUT(tb_m_users, { refreshToken: refreshToken }, `WHERE user_id = ${userId}`);
+}
+
+async function deleteStoredRefreshToken(userId) {
+  await queryPUT(tb_m_users, { refreshToken: null }, `WHERE user_id = ${userId}`);
+}
+
 module.exports = {
+  saveRefreshToken,
+  getStoredRefreshToken,
+  deleteStoredRefreshToken,
   generateToken: async (payload) => {
-    var token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '1m' });
+    // Wajib menyertakan userId dan username agar token bisa digunakan untuk otentikasi
+    const token = jwt.sign(
+      {
+        user_id: payload.id,
+        username: payload.username,
+        fullname: payload.fullname,
+        email: payload.email,
+        created_by: payload.created_by,
+        created_dt: payload.created_dt,
+        address: payload.address,
+      },
+      process.env.SECRET_KEY,
+      { expiresIn: '1h' } // 1 menit access token
+    );
     return token;
   },
 
-  generateRefreshToken: async (user) => {  
-    const refreshToken = jwt.sign({ userId: user.id }, process.env.SECRET_KEY, { expiresIn: '1d' }); // Refresh token berlaku selama 7 hari  
-    // Simpan refresh token di database atau cache untuk verifikasi di masa mendatang  
-    // await saveRefreshToken(user.id, refreshToken); // Implementasikan fungsi ini untuk menyimpan refresh token  
-    return refreshToken;  
+  generateRefreshToken: async (user) => {
+    const refreshToken = jwt.sign(
+      { userId: user.id ?? user.user_id, username: user.username },
+      process.env.SECRET_KEY,
+      { expiresIn: '7d' }
+    );
+  
+    const userId = user.id ?? user.user_id;
+    if (!userId) throw new Error("Missing user id for refresh token saving");
+  
+    await queryPUT(tb_m_users, { refreshToken: refreshToken }, `WHERE user_id = ${userId}`);
+    return refreshToken;
   },
+  
+
+
 
   verifyToken: async (req, res, next) => {
     try {
