@@ -1,6 +1,7 @@
 var express = require("express");
 var fs = require("fs");
 var app = express();
+const path = require("path");
 const http = require("http");
 const server = http.createServer(app);
 const WebSocket = require("ws");
@@ -81,13 +82,20 @@ wsGlobal.on("connection", function connection(ws, request) {
 
     switch (data.event) {
       case "UPLOAD_IMAGE":
-        const base64 = `data:image/jpeg;base64,${data.data.image.slice(
-          2,
-          data.data.image.length - 1
-        )}`;
+        // const base64 = `data:image/jpeg;base64,${data.data.image.slice(
+        //   2,
+        //   data.data.image.length - 1
+        // )}`;
         // const pathToSaveImage = `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`;
-        const pathToSaveImage = path.resolve(__dirname, `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`);
-
+        // const pathToSaveImage = path.resolve(__dirname, `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`);
+        
+        const saveDir = path.resolve(__dirname, './uploads/drowsinessHistories');
+        if (!fs.existsSync(saveDir)) {
+          fs.mkdirSync(saveDir, { recursive: true });
+        }
+        const pathToSaveImage = path.join(saveDir, `drow_${new Date().getTime()}.png`);
+        
+        const base64 = `data:image/jpeg;base64,${data.data.image}`;
         // DUMMY
         let insertedData = {
           vehicle_id: query.vehicle_id,
@@ -99,6 +107,7 @@ wsGlobal.on("connection", function connection(ws, request) {
         };
         await queryPOST(tb_r_driver_behavior, insertedData);
         converBase64ToImage(base64, pathToSaveImage);
+
         wsGlobal.clients.forEach((client) => {
           if (
             client.readyState === WebSocket.OPEN &&
@@ -202,13 +211,20 @@ wsGeofencing.on("connection", function connection(ws, request) {
 
     switch (data.event) {
       case "UPLOAD_IMAGE":
-        const base64 = `data:image/jpeg;base64,${data.data.image.slice(
-          2,
-          data.data.image.length - 1
-        )}`;
+        // const base64 = `data:image/jpeg;base64,${data.data.image.slice(
+        //   2,
+        //   data.data.image.length - 1
+        // )}`;
         // const pathToSaveImage = `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`;
-        const pathToSaveImage = path.resolve(__dirname, `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`);
-
+        // const pathToSaveImage = path.resolve(__dirname, `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`);
+        
+        const saveDir = path.resolve(__dirname, './uploads/drowsinessHistories');
+        if (!fs.existsSync(saveDir)) {
+          fs.mkdirSync(saveDir, { recursive: true });
+        }
+        const pathToSaveImage = path.join(saveDir, `drow_${new Date().getTime()}.png`);
+        
+        const base64 = `data:image/jpeg;base64,${data.data.image}`;
         // DUMMY
         let insertedData = {
           vehicle_id: query.vehicle_id,
@@ -220,6 +236,7 @@ wsGeofencing.on("connection", function connection(ws, request) {
         };
         await queryPOST(tb_r_driver_behavior, insertedData);
         converBase64ToImage(base64, pathToSaveImage);
+
         wsGlobal.clients.forEach((client) => {
           if (
             client.readyState === WebSocket.OPEN &&

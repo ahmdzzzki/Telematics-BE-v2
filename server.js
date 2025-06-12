@@ -1,6 +1,7 @@
 var express = require("express");
 var fs = require("fs");
 var app = express();
+const path = require('path');
 const http = require("http");
 const server = http.createServer(app);
 const WebSocket = require("ws");
@@ -64,7 +65,7 @@ wsGlobal.on("connection", function connection(ws, request) {
       request.socket.remotePort
   );
   const query = url.parse(request.url, true).query;
-  query.vehicle_id = 'MHFAA8AF7P0001003'
+  query.vehicle_id = query.vehicle_id
   const jsonData = {
     vehicle_id: query.vehicle_id,
     device: query.device,
@@ -94,12 +95,14 @@ wsGlobal.on("connection", function connection(ws, request) {
 
     switch (data.event) {
       case "UPLOAD_IMAGE":
-        const base64 = `data:image/jpeg;base64,${data.data.image.slice(
-          2,
-          data.data.image.length - 1
-        )}`;
-        // const pathToSaveImage = `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`;
-        const pathToSaveImage = path.resolve(__dirname, `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`);
+        const cleanedBase64 = data.data.image.replace(/^b'|^b"|\'$|\"$/g, '');
+
+        const isJpeg = cleanedBase64.startsWith('/9j/');
+        const extension = isJpeg ? 'jpg' : 'png';
+        const base64 = `data:image/${extension};base64,${cleanedBase64}`;
+        const pathToSaveImage = `./uploads/drowsinessHistories/drow_${Date.now()}.${extension}`;        
+
+        // const base64 = `data:image/png;base64,${data.data.image}`;
         // DUMMY
         let insertedData = {
           vehicle_id: query.vehicle_id,
@@ -215,13 +218,15 @@ wsGeofencing.on("connection", function connection(ws, request) {
 
     switch (data.event) {
       case "UPLOAD_IMAGE":
-        const base64 = `data:image/jpeg;base64,${data.data.image.slice(
-          2,
-          data.data.image.length - 1
-        )}`;
-        // const pathToSaveImage = `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`;
-        const pathToSaveImage = path.resolve(__dirname, `./uploads/drowsinessHistories/drow_${new Date().getTime()}.png`);
 
+        const cleanedBase64 = data.data.image.replace(/^b'|^b"|\'$|\"$/g, '');
+
+        const isJpeg = cleanedBase64.startsWith('/9j/');
+        const extension = isJpeg ? 'jpg' : 'png';
+        const base64 = `data:image/${extension};base64,${cleanedBase64}`;
+        const pathToSaveImage = `./uploads/drowsinessHistories/drow_${Date.now()}.${extension}`;
+      
+        // const base64 = `data:image/png;base64,${data.data.image}`;
         // DUMMY
         let insertedData = {
           vehicle_id: query.vehicle_id,
