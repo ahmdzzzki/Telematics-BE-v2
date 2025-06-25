@@ -235,6 +235,8 @@ wsGeofencing.on("connection", function connection(ws, request) {
           location_id: 1,
           behavior_type: data.data.behavior_type,
           img_path: pathToSaveImage,
+          ear: data.data.ear,
+          mar: data.data.mar,
         };
         await queryPOST(tb_r_driver_behavior, insertedData);
         converBase64ToImage(base64, pathToSaveImage);
