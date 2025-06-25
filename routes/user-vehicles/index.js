@@ -35,7 +35,7 @@ router.delete("/visitor/name/:visitor_name", deleteVisitorByName);
 
 // Visitor Activity
 router.post("/visitor/activity", recordVisitorActivity);
-router.get("/visitor/activity/:visitor_id", getRecordVisitorActivity);
+router.get("/visitor/activity/:vehicle_id", getRecordVisitorActivity);
 
 // Key Access
 router.post("/key/save", registerVisitorKeyAccesstoDB);

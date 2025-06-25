@@ -200,59 +200,121 @@ module.exports = {
     }  
   },
 
-  recordVisitorActivity: async (req, res) => {  
-    try {  
-      const { visitor_id } = req.body; // Access data from the request body  
+  // recordVisitorActivity: async (req, res) => {  
+  //   try {  
+  //     const { visitor_id } = req.body; // Access data from the request body  
   
-      // Validate input  
-      if (!visitor_id) {  
-        return response.error(res, "Visitor ID is required", 400);  
-      }  
+  //     // Validate input  
+  //     if (!visitor_id) {  
+  //       return response.error(res, "Visitor ID is required", 400);  
+  //     }  
 
   
-      // Check if key_access exists  
-      const checkQuery = `SELECT * FROM ${tb_m_visitor} WHERE id = '${visitor_id}'`;  
-      const existingVisitor = await queryCustom(checkQuery);  
+  //     // Check if key_access exists  
+  //     const checkQuery = `SELECT * FROM ${tb_m_visitor} WHERE id = '${visitor_id}'`;  
+  //     const existingVisitor = await queryCustom(checkQuery);  
   
-      if (existingVisitor.length === 0) {  
-        return response.error(res, "Visitor not found", 404);  
-      }  
+  //     if (existingVisitor.length === 0) {  
+  //       return response.error(res, "Visitor not found", 404);  
+  //     }  
   
-      // Insert visitor activity  
-      const activityData = {  
-        visitor_id,  
+  //     // Insert visitor activity  
+  //     const activityData = {  
+  //       visitor_id,  
         
-      };  
-      await queryPOST(tb_r_visitor_activity, activityData);  
+  //     };  
+  //     await queryPOST(tb_r_visitor_activity, activityData);  
   
-      response.success(res, "Visitor activity recorded successfully");  
-    } catch (error) {  
-      console.error(error);  
-      response.error(res, "Internal server error");  
-    } 
-  },
+  //     response.success(res, "Visitor activity recorded successfully");  
+  //   } catch (error) {  
+  //     console.error(error);  
+  //     response.error(res, "Internal server error");  
+  //   } 
+  // },
 
-  getRecordVisitorActivity : async (req, res) => {
+  recordVisitorActivity: async (req, res) => {
     try {
-        const {visitor_id} = req.params;
-        // Query untuk mengambil semua data dari tabel tb_r_visitor_activity
-        const query = `SELECT * FROM ${tb_r_visitor_activity} where visitor_id = '${visitor_id}' order by created_at desc`;
+      const { key_access_id } = req.body;
 
-        // Menjalankan query menggunakan fungsi queryCustom
-        const visitorActivities = await queryCustom(query);
+      if (!key_access_id) {
+        return response.error(res, "Key Access ID is required", 400);
+      }
 
-        // Jika tidak ada data yang ditemukan
-        if (visitorActivities.length === 0) {
-            return response.error(res, "No visitor activity records found", 404);
-        }
+      const keyAccessQuery = `
+        SELECT visitor_id FROM tb_m_key_access WHERE id = '${key_access_id}'
+      `;
+      const keyAccess = await queryCustom(keyAccessQuery);
 
-        // Mengirimkan respons sukses dengan data aktivitas pengunjung
-        response.success(res, visitorActivities);
+      if (keyAccess.length === 0) {
+        return response.error(res, "Key Access not found", 404);
+      }
+
+      const visitor_id = keyAccess[0].visitor_id;
+
+      const insertQuery = `
+        INSERT INTO tb_r_visitor_activity (visitor_id, key_access_id, created_at)
+        VALUES ('${visitor_id}', '${key_access_id}', NOW())
+      `;
+      await queryCustom(insertQuery);
+
+      return response.success(res, "Visitor activity recorded successfully");
     } catch (error) {
-        console.error(error);
-        response.error(res, "Internal server error");
+      console.error("recordVisitorActivity Error:", error);
+      return response.error(res, "Internal server error", 500);
     }
   },
+
+  getRecordVisitorActivity: async (req, res) => {
+    try {
+      const { vehicle_id } = req.params;
+
+      if (!vehicle_id) {
+        return response.error(res, "Vehicle ID is required", 400);
+      }
+
+      const query = `
+        SELECT 
+          va.created_at, 
+          v.visitor_name, 
+          k.type AS key_type 
+        FROM tb_r_visitor_activity va
+        JOIN tb_m_visitor v ON va.visitor_id = v.id
+        LEFT JOIN tb_m_key_access k ON va.key_access_id = k.id
+        WHERE v.vehicle_id = '${vehicle_id}'
+        ORDER BY va.created_at DESC
+      `;
+
+      const records = await queryCustom(query);
+
+      return response.success(res, records);
+    } catch (error) {
+      console.error("getRecordVisitorActivity Error:", error);
+      return response.error(res, "Internal server error", 500);
+    }
+  },
+
+
+  // getRecordVisitorActivity : async (req, res) => {
+  //   try {
+  //       const {visitor_id} = req.params;
+  //       // Query untuk mengambil semua data dari tabel tb_r_visitor_activity
+  //       const query = `SELECT * FROM ${tb_r_visitor_activity} where visitor_id = '${visitor_id}' order by created_at desc`;
+
+  //       // Menjalankan query menggunakan fungsi queryCustom
+  //       const visitorActivities = await queryCustom(query);
+
+  //       // Jika tidak ada data yang ditemukan
+  //       if (visitorActivities.length === 0) {
+  //           return response.error(res, "No visitor activity records found", 404);
+  //       }
+
+  //       // Mengirimkan respons sukses dengan data aktivitas pengunjung
+  //       response.success(res, visitorActivities);
+  //   } catch (error) {
+  //       console.error(error);
+  //       response.error(res, "Internal server error");
+  //   }
+  // },
 
   /* editVisitor: async (req, res) => {  
     try {  
